@@ -24,13 +24,16 @@ export default function InvoiceScreen() {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [clientSecret, setClientSecret] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [VAT, setVAT] = useState(0);
 
   const getPaymentIntent = async () => {
     try {
       const amount =
         parseInt(invoice.amount) +
         parseInt(invoice.latefees) +
-        parseInt(invoice.damages);
+        parseInt(invoice.damages) +
+        Number(parseFloat(VAT).toFixed(2));
+
       const response = await axios.post(`${url}/invoices/pay`, { amount });
 
       const { clientSecret } = response.data;
@@ -58,8 +61,15 @@ export default function InvoiceScreen() {
         Alert.alert("Success", "Your payment is confirmed!");
         //update the invoice status
         try {
+          const amount =
+            parseInt(invoice.amount) +
+            parseInt(invoice.latefees) +
+            parseInt(invoice.damages) +
+            Number(parseFloat(VAT).toFixed(2));
+
           const response = await axios.post(`${url}/invoices/updateStatus`, {
             invoiceid: invoice.invoiceid,
+            amount,
           });
 
           if (response.status === 200) {
@@ -90,6 +100,14 @@ export default function InvoiceScreen() {
   useEffect(() => {
     getInvoiceById();
   }, []);
+
+  useEffect(() => {
+    const rentalVAT = invoice.amount * 0.15;
+    const damageVAT = invoice.damages * 0.15;
+    const latefeesVAT = invoice.latefees * 0.15;
+
+    setVAT(rentalVAT + damageVAT + latefeesVAT);
+  }, [invoice]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -126,7 +144,8 @@ export default function InvoiceScreen() {
               R
               {parseInt(invoice.amount) +
                 parseInt(invoice.latefees) +
-                parseInt(invoice.damages)}
+                parseInt(invoice.damages) +
+                Number(parseFloat(VAT).toFixed(2))}
             </Text>
             <Text style={styles.date}>
               ● {formatedDate(invoice.generateddate)}
@@ -154,6 +173,12 @@ export default function InvoiceScreen() {
             <Text style={styles.taskText}>Late fees</Text>
             <Text style={styles.taskTotal}>R{invoice.latefees}</Text>
           </View>
+          <View style={styles.taskRow}>
+            <Text style={styles.taskText}>VAT(15%)</Text>
+            <Text style={styles.taskTotal}>
+              R{Number(parseFloat(VAT).toFixed(2))}
+            </Text>
+          </View>
         </View>
 
         <View style={styles.divider} />
@@ -173,7 +198,8 @@ export default function InvoiceScreen() {
             R
             {parseInt(invoice.amount) +
               parseInt(invoice.latefees) +
-              parseInt(invoice.damages)}
+              parseInt(invoice.damages) +
+              Number(parseFloat(VAT).toFixed(2))}
           </Text>
         </View>
       </View>

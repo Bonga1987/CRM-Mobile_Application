@@ -39,6 +39,9 @@ export const AuthProvider = ({ children }) => {
     phonenumber: "",
     email: "",
     driverslicense: "",
+    licenseissuedate: null,
+    licenseexpirydate: null,
+    licensecode: "",
   });
   const [profileImage, setProfileImage] = useState(null);
   const [lastStatus, setLastStatus] = useState(null);

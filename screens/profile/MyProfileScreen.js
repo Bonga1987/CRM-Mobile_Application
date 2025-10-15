@@ -19,6 +19,8 @@ import * as ImagePicker from "expo-image-picker";
 import { AuthContext } from "../../context/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { Picker } from "@react-native-picker/picker";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 export default function MyProfileScreen() {
   const {
@@ -28,6 +30,7 @@ export default function MyProfileScreen() {
     setProfileImage,
     BASE_URL,
     BASE_URL_UPLOAD,
+    formatedDateNoHours,
   } = useContext(AuthContext);
   const url = `${BASE_URL}/users`;
   const [customerid] = useState(userData.customerid);
@@ -36,8 +39,29 @@ export default function MyProfileScreen() {
   const [phonenumber, setPhoneNumber] = useState(userData.phonenumber);
   const [email, setEmail] = useState(userData.email);
   const [driverslicense, setDriversLicense] = useState(userData.driverslicense);
+  const [licensecode, setLicenseCode] = useState(userData.licensecode);
+  const [licenseissuedate, setIssueDate] = useState(
+    new Date(userData.licenseissuedate) || new Date()
+  );
+  const [licenseexpirydate, setExpiryDate] = useState(
+    new Date(userData.licenseexpirydate) || new Date()
+  );
   const [isEditing, setIsEditing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [isPickerVisible, setPickerVisible] = useState(false);
+  const [pickerField, setPickerField] = useState(null); // 'issue' or 'expiry'
+
+  const licenseCodes = [
+    { label: "Select Code", value: "" },
+    { label: "A1", value: "A1" },
+    { label: "A", value: "A" },
+    { label: "B", value: "B" },
+    { label: "EB", value: "EB" },
+    { label: "C1", value: "C1" },
+    { label: "C", value: "C" },
+    { label: "EC1", value: "EC1" },
+    { label: "EC", value: "EC" },
+  ];
 
   const validateForm = (fullname, driverslicense, phoneNumber, email) => {
     // --- Fullname length check (2-100 chars) ---
@@ -85,7 +109,8 @@ export default function MyProfileScreen() {
           !address ||
           !phonenumber ||
           !email ||
-          !driverslicense
+          !driverslicense ||
+          !licensecode
         ) {
           Alert.alert("Validation", `All fields are required`);
           return;
@@ -104,6 +129,9 @@ export default function MyProfileScreen() {
           phonenumber,
           email,
           driverslicense,
+          licensecode,
+          licenseissuedate,
+          licenseexpirydate,
         };
 
         //api call to update profile
@@ -181,6 +209,17 @@ export default function MyProfileScreen() {
     }, 2000);
   }, []);
 
+  const showPicker = (field) => {
+    setPickerField(field);
+    setPickerVisible(true);
+  };
+
+  const handleConfirm = (selectedDate) => {
+    if (pickerField === "issue") setIssueDate(selectedDate);
+    if (pickerField === "expiry") setExpiryDate(selectedDate);
+    setPickerVisible(false);
+  };
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView
@@ -257,13 +296,77 @@ export default function MyProfileScreen() {
             />
 
             <TextInput
-              style={styles.input}
+              style={[styles.input, { borderRadius: 10 }]}
               placeholder="Driver’s License Number"
               value={driverslicense}
               editable={isEditing}
               onChangeText={setDriversLicense}
               maxLength={12}
             />
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginHorizontal: 95,
+                gap: 5,
+              }}
+            >
+              <TouchableOpacity
+                style={styles.input}
+                onPress={() => showPicker("issue")}
+              >
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: "#555",
+                    textAlign: "center",
+                    fontWeight: "208",
+                  }}
+                >
+                  {licenseissuedate.toDateString()}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.input}
+                onPress={() => showPicker("expiry")}
+              >
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: "#555",
+                    textAlign: "center",
+                    fontWeight: "208",
+                  }}
+                >
+                  {licenseexpirydate.toDateString()}
+                </Text>
+              </TouchableOpacity>
+
+              <DateTimePickerModal
+                isVisible={isPickerVisible}
+                mode="date"
+                onConfirm={handleConfirm}
+                onCancel={() => setPickerVisible(false)}
+              />
+            </View>
+
+            <View style={(styles.pickerWrapper, styles.input)}>
+              <Picker
+                style={styles.input}
+                selectedValue={licensecode}
+                onValueChange={setLicenseCode}
+              >
+                {licenseCodes.map((item, indx) => (
+                  <Picker.Item
+                    key={indx}
+                    label={item.label}
+                    value={item.value}
+                  />
+                ))}
+              </Picker>
+            </View>
 
             {/* Edit/Save Button */}
             <TouchableOpacity style={styles.button} onPress={handleButtonPress}>

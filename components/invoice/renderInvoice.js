@@ -1,9 +1,19 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { AuthContext } from "../../context/AuthContext";
-import { useContext } from "react";
+import { useContext, useState, useEffect } from "react";
 
 export default function RenderInvoice({ item, navigation }) {
   const { formatedDate } = useContext(AuthContext);
+  const [VAT, setVAT] = useState(0);
+
+  useEffect(() => {
+    const rentalVAT = item.amount * 0.15;
+    const damageVAT = item.damages * 0.15;
+    const latefeesVAT = item.latefees * 0.15;
+
+    setVAT(rentalVAT + damageVAT + latefeesVAT);
+  }, []);
+
   return (
     <View style={styles.invoiceContainer}>
       <View style={styles.invoiceCard}>
@@ -18,7 +28,8 @@ export default function RenderInvoice({ item, navigation }) {
             R
             {parseInt(item.amount) +
               parseInt(item.latefees) +
-              parseInt(item.damages)}
+              parseInt(item.damages) +
+              Number(parseFloat(VAT).toFixed(2))}
           </Text>
           <Text style={styles.date}>● {formatedDate(item.generateddate)}</Text>
         </View>

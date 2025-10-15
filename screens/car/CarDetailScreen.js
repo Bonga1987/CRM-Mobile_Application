@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#4CAF50",
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 25,
+    borderRadius: 10,
   },
   bookText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
 });
