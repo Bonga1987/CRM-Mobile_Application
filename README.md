@@ -5,11 +5,8 @@ A full-stack car rental management system built with **React**, **Node.js**, and
 ---
 
 ##  Features
-- Vehicle management (add, update, delete, mark maintenance)
 - Customer registration and driver’s license verification
 - Booking and invoice management
-- Damage and maintenance tracking
-- Dashboard reports (fleet, revenue, and usage statistics)
 - Secure authentication and authorization
 
 ---
