@@ -154,6 +154,13 @@ export default StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 15,
   },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    overflow: "hidden", // ensures rounded border looks smooth
+    backgroundColor: "#fff",
+  },
   linkText: {
     marginTop: 20,
     color: "blue",

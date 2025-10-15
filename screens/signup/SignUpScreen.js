@@ -10,11 +10,13 @@ import {
   TouchableWithoutFeedback,
   Alert,
 } from "react-native";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import styles from "../../style/styles.";
 import axios from "axios";
 import { AuthContext } from "../../context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { Picker } from "@react-native-picker/picker";
 
 export default function SignUpScreen({ navigation }) {
   const [fullname, setFullname] = useState("");
@@ -25,11 +27,28 @@ export default function SignUpScreen({ navigation }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const { BASE_URL } = useContext(AuthContext);
+  const { BASE_URL, formatedDateNoHours } = useContext(AuthContext);
   const url = `${BASE_URL}/users`;
+  const [issueDate, setIssueDate] = useState(new Date());
+  const [expiryDate, setExpiryDate] = useState(new Date());
+  const [pickerField, setPickerField] = useState(null); // 'issue' or 'expiry'
+  const [isPickerVisible, setPickerVisible] = useState(false);
+  const [selectedCode, setSelectedCode] = useState("");
 
   const passwordsMatch =
     confirmPassword.length > 0 && password === confirmPassword;
+
+  const licenseCodes = [
+    { label: "Select Code", value: "" },
+    { label: "A1", value: "A1" },
+    { label: "A", value: "A" },
+    { label: "B", value: "B" },
+    { label: "EB", value: "EB" },
+    { label: "C1", value: "C1" },
+    { label: "C", value: "C" },
+    { label: "EC1", value: "EC1" },
+    { label: "EC", value: "EC" },
+  ];
 
   const validateForm = (
     password,
@@ -96,7 +115,10 @@ export default function SignUpScreen({ navigation }) {
         !email ||
         !driverslicense ||
         !password ||
-        !confirmPassword
+        !confirmPassword ||
+        !issueDate ||
+        !expiryDate ||
+        !selectedCode
       ) {
         Alert.alert("Validation", `All fields are required`);
         return;
@@ -118,6 +140,12 @@ export default function SignUpScreen({ navigation }) {
         return;
       }
 
+      // Basic rule checks
+      if (new Date(expiryDate) < new Date()) {
+        Alert.alert("License expired", "Please enter a valid expiry date");
+        return;
+      }
+
       const response = await axios.post(`${url}/signup`, {
         fullname,
         address,
@@ -126,10 +154,20 @@ export default function SignUpScreen({ navigation }) {
         driverslicense,
         password,
         confirmPassword,
+        licenseissuedate: formatedDateNoHours(issueDate),
+        licenseexpirydate: formatedDateNoHours(expiryDate),
+        licensecode: selectedCode,
       });
 
       if (response.status === 200) {
         if (response.data.length !== 0) {
+          if (response.data.message === "Exist") {
+            Alert.alert(
+              "Account exist",
+              "An account with this email already exist please use another email or login"
+            );
+            return;
+          }
           setPassword("");
           setAddress("");
           setEmail("");
@@ -151,6 +189,17 @@ export default function SignUpScreen({ navigation }) {
         error.message
       );
     }
+  };
+
+  const showPicker = (field) => {
+    setPickerField(field);
+    setPickerVisible(true);
+  };
+
+  const handleConfirm = (selectedDate) => {
+    if (pickerField === "issue") setIssueDate(selectedDate);
+    if (pickerField === "expiry") setExpiryDate(selectedDate);
+    setPickerVisible(false);
   };
 
   return (
@@ -208,6 +257,70 @@ export default function SignUpScreen({ navigation }) {
               onChangeText={setDriverslicense}
               maxLength={12}
             />
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginHorizontal: 95,
+                gap: 5,
+              }}
+            >
+              <TouchableOpacity
+                style={styles.input}
+                onPress={() => showPicker("issue")}
+              >
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: "#555",
+                    textAlign: "center",
+                    fontWeight: "208",
+                  }}
+                >
+                  {issueDate.toDateString()}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.input}
+                onPress={() => showPicker("expiry")}
+              >
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: "#555",
+                    textAlign: "center",
+                    fontWeight: "208",
+                  }}
+                >
+                  {expiryDate.toDateString()}
+                </Text>
+              </TouchableOpacity>
+
+              <DateTimePickerModal
+                isVisible={isPickerVisible}
+                mode="date"
+                onConfirm={handleConfirm}
+                onCancel={() => setPickerVisible(false)}
+              />
+            </View>
+
+            <View style={(styles.pickerWrapper, styles.input)}>
+              <Picker
+                style={styles.input}
+                selectedValue={selectedCode}
+                onValueChange={setSelectedCode}
+              >
+                {licenseCodes.map((item, indx) => (
+                  <Picker.Item
+                    key={indx}
+                    label={item.label}
+                    value={item.value}
+                  />
+                ))}
+              </Picker>
+            </View>
 
             <View style={styles.passwordContainer}>
               <TextInput

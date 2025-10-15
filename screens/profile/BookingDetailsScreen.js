@@ -17,7 +17,7 @@ export default function BookingDetailsScreen({ navigation }) {
   const route = useRoute();
   const [booking, setBooking] = useState({});
   const { bookingid } = route.params;
-  const { formatedDate, BASE_URL } = useContext(AuthContext);
+  const { formatedDateNoHours, BASE_URL } = useContext(AuthContext);
   const [refreshing, setRefreshing] = useState(false);
   const url = `${BASE_URL}/bookings`;
 
@@ -83,13 +83,15 @@ export default function BookingDetailsScreen({ navigation }) {
 
           <View style={styles.row}>
             <Text style={styles.label}>Pickup date:</Text>
-            <Text style={styles.value}>{formatedDate(booking.pickupdate)}</Text>
+            <Text style={styles.value}>
+              {formatedDateNoHours(booking.pickupdate)}
+            </Text>
           </View>
 
           <View style={styles.row}>
             <Text style={styles.label}>Dropoff Date:</Text>
             <Text style={styles.value}>
-              {formatedDate(booking.dropoffdate)}
+              {formatedDateNoHours(booking.dropoffdate)}
             </Text>
           </View>
 
@@ -111,7 +113,7 @@ export default function BookingDetailsScreen({ navigation }) {
           <View style={styles.row}>
             <Text style={styles.label}>Actual return Date:</Text>
             <Text style={styles.value}>
-              {formatedDate(booking.actualreturndate)}
+              {formatedDateNoHours(booking.actualreturndate)}
             </Text>
           </View>
 
